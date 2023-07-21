@@ -1,4 +1,4 @@
-// MHI-AC-Ctrl by absalom-muc
+// MHI-AC-Ctrl 
 // read + write data via SPI controlled by MQTT
 // for version see support.h
 #include "MHI-AC-Ctrl-core.h"
@@ -13,6 +13,12 @@ POWER_STATUS power_status = unknown;
 
 unsigned long room_temp_set_timeout_Millis = millis();
 bool troom_was_set_by_MQTT = false;
+  static int WiFiStatus = WIFI_CONNECT_TIMEOUT;   // start connecting to WiFi
+  static int MQTTStatus = MQTT_NOT_CONNECTED;
+  static unsigned long previousMillis = millis();
+  #if TEMP_MEASURE_PERIOD > 0
+  static byte ds18x20_value_old = 0;
+  #endif
 
 void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int length) {
   payload[length] = 0;  // we need a string
@@ -410,14 +416,21 @@ void setup() {
   mhi_ac_ctrl_core.MHIAcCtrlStatus(&mhiStatusHandler);
   mhi_ac_ctrl_core.init();
   // mhi_ac_ctrl_core.set_fan(7); // set fan AUTO, see https://github.com/absalom-muc/MHI-AC-Ctrl/issues/99
+  Serial.println("Setup done..."); 
+  previousMillis = millis();
 }
 
 
 void loop() {
-  static byte ds18x20_value_old = 0;
-  static int WiFiStatus = WIFI_CONNECT_TIMEOUT;   // start connecting to WiFi
-  static int MQTTStatus = MQTT_NOT_CONNECTED;
-  static unsigned long previousMillis = millis();
+
+  
+ 
+  Serial.println("You are here 01"); 
+  Serial.print("WiFi Status: ");
+  Serial.println(WiFi.status());
+  Serial.print("MWTT Status: ");
+  Serial.println(MQTTreconnect());
+
 
   if (((WiFi.status() != WL_CONNECTED)  || 
        (WiFiStatus != WIFI_CONNECT_OK)) || 
@@ -432,8 +445,9 @@ void loop() {
     MQTTStatus=MQTTreconnect();
     if (MQTTStatus == MQTT_RECONNECTED)
       mhi_ac_ctrl_core.reset_old_values();  // after a reconnect
-    ArduinoOTA.handle();
+    //ArduinoOTA.handle();
   }
+
   
 #if TEMP_MEASURE_PERIOD > 0
   byte ds18x20_value = getDs18x20Temperature(25);

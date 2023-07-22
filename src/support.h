@@ -3,7 +3,7 @@
 #include "MHI-AC-Ctrl-core.h"
 #include "MHI-AC-Ctrl.h"
 
-#define VERSION "2.7R4"
+#define VERSION AUTO_VERSION
 
 
 #define WIFI_PASSWORD "APPASSWORD"

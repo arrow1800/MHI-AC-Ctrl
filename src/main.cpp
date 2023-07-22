@@ -11,7 +11,7 @@ POWER_STATUS power_status = unknown;
 
 unsigned long room_temp_set_timeout_Millis = millis();
 bool troom_was_set_by_MQTT = false;
-static int WiFiStatus = WIFI_CONNECT_TIMEOUT;   // start connecting to WiFi
+//static int WiFiStatus = WIFI_CONNECT_TIMEOUT;   // start connecting to WiFi
 static int MQTTStatus = MQTT_NOT_CONNECTED;
 static unsigned long previousMillis = millis();
 #if TEMP_MEASURE_PERIOD > 0
@@ -422,29 +422,23 @@ void setup() {
 
 
 void loop() {
-
-  
- 
-  Serial.println("You are here 01"); 
   Serial.print("WiFi Status: ");
   Serial.println(WiFi.status());
-  Serial.print("MWTT Status: ");
-  Serial.println(MQTTreconnect());
 
 
-  if (((WiFi.status() != WL_CONNECTED)  || 
-       (WiFiStatus != WIFI_CONNECT_OK)) || 
-       (WiFI_SEARCHStrongestAP && (millis() - previousMillis >= WiFI_SEARCH_FOR_STRONGER_AP_INTERVALL*60*1000))) {
-    //Serial.printf("loop: call setupWiFi(WiFiStatus)\n");
-    //setupWiFi(WiFiStatus);
-    previousMillis = millis();
-    //Serial.println(WiFiStatus);
+  if (!WiFi.isConnected()){
+    Serial.println("No Wi-Fi Connection, restarting...");
+    delay(1000);
+    ESP.restart();
   }
   else {
     //Serial.printf("loop: WiFi.status()=%i\n", WiFi.status()); // see https://realglitch.com/2018/07/arduino-wifi-status-codes/
+    Serial.println("Checking MQTT");
     MQTTStatus=MQTTreconnect();
-    if (MQTTStatus == MQTT_RECONNECTED)
-      mhi_ac_ctrl_core.reset_old_values();  // after a reconnect
+    if (MQTTStatus == MQTT_RECONNECTED){
+      Serial.println("Resetting old values MHI");
+      mhi_ac_ctrl_core.reset_old_values();  // after a reconnect.
+    }
     //ArduinoOTA.handle();
   }
 

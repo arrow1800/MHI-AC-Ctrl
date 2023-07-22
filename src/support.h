@@ -1,7 +1,5 @@
 #pragma once
 
-
-
 #include "MHI-AC-Ctrl-core.h"
 #include "MHI-AC-Ctrl.h"
 

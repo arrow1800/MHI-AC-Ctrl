@@ -74,83 +74,7 @@ void initWiFi(){
   WiFi.persistent(true);
 
   //wifiManager.resetSettings();
-  /* Code to be removed
-  WiFi.persistent(false);
-  WiFi.disconnect(true);    // Delete SDK wifi config
-  delay(200);
-  WiFi.mode(WIFI_STA);
-  WiFi.hostname(HOSTNAME); 
-  WiFi.setAutoReconnect(false);
-  //WiFi.begin(WIFI_SSID, WIFI_PASSWORD);*/
 }
-
-
-/*
-void handleWiFiScanResult(int WifinetworksFound) {  // Handles async WiFi scan result
-  int max_rssi = -999;
-  int strongest_AP = -1;
-
-  networksFound = WifinetworksFound;  // will be used other places
- 
-  Serial.printf_P(PSTR("handleWiFiScanResult(): %i access points available\n"), networksFound);
-  for (uint i = 0; i < networksFound; i++)
-  {
-    Serial.printf("%2d %25s %2d %ddBm %s %s %02x\n", i + 1, WiFi.SSID(i).c_str(), WiFi.channel(i), WiFi.RSSI(i), WiFi.BSSIDstr(i).c_str(), WiFi.encryptionType(i) == ENC_TYPE_NONE ? "open" : "secured", (uint)WiFi.encryptionType(i));
-    if((strcmp(WiFi.SSID(i).c_str(), WIFI_SSID) == 0) && (WiFi.RSSI(i)>max_rssi)){
-        max_rssi = WiFi.RSSI(i);
-        strongest_AP = i;
-    }
-  }
-  Serial.printf_P(PSTR("current BSSID: %s, strongest BSSID: %s\n"), WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str());
-  if((WiFi.status() != WL_CONNECTED) || ((max_rssi > WiFi.RSSI() + 10) && (strcmp(WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str()) != 0))) {
-    if(strongest_AP != -1) {
-      Serial.printf_P(PSTR("Connecting from bssid:%s to bssid:%s, channel:%i\n"), WiFi.BSSIDstr().c_str(), WiFi.BSSIDstr(strongest_AP).c_str(), WiFi.channel(strongest_AP));
-      WiFi.begin(WIFI_SSID, WIFI_PASSWORD, WiFi.channel(strongest_AP), WiFi.BSSID(strongest_AP), true);
-    }
-    else {
-      Serial.println(F("No matching AP found (maybe hidden SSID), however try to connect."));
-      WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-    }
-    WiFiStatus = WIFI_CONNECT_ONGOING;
-    Serial.println(F("WIFI_CONNECT_ONGOING"));
-    WiFiTimeoutMillis = millis();
-  }
-  else {  // scanning is started for WiFI_SEARCHStrongestAP and WiFi was already connected
-    WiFiStatus = WIFI_CONNECT_SCANNING_DONE;
-    Serial.println(F("WIFI_CONNECT_SCANNING_DONE"));
-  }
-}
-
-void setupWiFi(int& WiFiStatusParam) {
-
-  if(WiFiStatus != WIFI_CONNECT_ONGOING) {   // WIFI_CONNECT_OK or WIFI_CONNECT_TIMEOUT or WIFI_CONNECT_SCANNING or WIFI_CONNECT_SCANNING_DONE
-    if (WiFiStatus == WIFI_CONNECT_OK || WiFiStatus == WIFI_CONNECT_TIMEOUT){  // Start scanning async if not in already in progress 
-      WiFi.scanDelete();
-      Serial.println(F("setupWiFi: Start async scanNetworks"));
-      WiFi.scanNetworksAsync(handleWiFiScanResult);
-      WiFiStatus = WIFI_CONNECT_SCANNING;
-      Serial.println(F("WIFI_CONNECT_SCANNING"));
-    }
-
-    if (WiFiStatus == WIFI_CONNECT_SCANNING_DONE){ // after scanning for WiFI_SEARCHStrongestAP. Should be still connected
-        WiFiStatus = WIFI_CONNECT_OK;
-        Serial.println(F("WIFI_CONNECT_OK"));
-    }
-  }
-  else { // WiFiStatus == WIFI_CONNECT_ONGOING
-    if(WiFi.status() == WL_CONNECTED){
-      Serial.printf_P(PSTR(" connected to %s, IP address: %s (%ddBm)\n"), WIFI_SSID, WiFi.localIP().toString().c_str(), WiFi.RSSI());
-      WiFiStatus = WIFI_CONNECT_OK;
-      Serial.println(F("WIFI_CONNECT_OK"));
-    }
-    else if(millis() - WiFiTimeoutMillis > 10*1000) {  // timeout after 10 seconds
-      WiFiStatus = WIFI_CONNECT_TIMEOUT;
-      Serial.println(F("WIFI_CONNECT_TIMEOUT"));
-    }
-  }
-  WiFiStatusParam = WiFiStatus; // return WiFiStatus to caller
-}
-*/
 
 int MQTTreconnect() {
   char strtmp[50];
@@ -170,6 +94,7 @@ int MQTTreconnect() {
       reconnect_trials=0;
       output_P((ACStatus)type_status, PSTR(TOPIC_CONNECTED), PSTR(PAYLOAD_CONNECTED_TRUE));
       output_P((ACStatus)type_status, PSTR(TOPIC_VERSION), PSTR(VERSION));
+
       itoa(WiFi.RSSI(), strtmp, 10);
       output_P((ACStatus)type_status, PSTR(TOPIC_RSSI), strtmp);
       itoa(WIFI_lost, strtmp, 10);
@@ -233,14 +158,17 @@ void output_P(const ACStatus status, PGM_P topic, PGM_P payload) {
   
   Serial.printf_P(PSTR("status=%i topic=%s payload=%s\n"), status, topic, payload);
   
-  if ((status & 0xc0) == type_status)
+  if ((status & 0xc0) == type_status){
     strncpy_P(mqtt_topic, PSTR(MQTT_PREFIX), mqtt_topic_size);
+  }
   else if ((status & 0xc0) == type_opdata)
     strncpy_P(mqtt_topic, PSTR(MQTT_OP_PREFIX), mqtt_topic_size);
   else if ((status & 0xc0) == type_erropdata)
     strncpy_P(mqtt_topic, PSTR(MQTT_ERR_OP_PREFIX), mqtt_topic_size);
   strncat_P(mqtt_topic, topic, mqtt_topic_size - strlen(mqtt_topic));
+  
   MQTTclient.publish_P(mqtt_topic, payload, true);
+  Serial.print("You are here...");
 }
 
 #if TEMP_MEASURE_PERIOD > 0

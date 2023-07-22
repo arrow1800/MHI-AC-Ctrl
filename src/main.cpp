@@ -397,7 +397,8 @@ void setup() {
   Serial.begin(115200);
   delay(100);
   Serial.println();
-  Serial.println(("Starting MHI-AC-Ctrl v" VERSION));
+  Serial.print("Starting MHI-AC-Ctrl ");
+  Serial.printf_P(PSTR("version: %lu\n"), VERSION);
   Serial.printf_P(PSTR("CPU frequency[Hz]=%lu\n"), F_CPU);
   Serial.printf("ESP.getCoreVersion()=%s\n", ESP.getCoreVersion().c_str());
   Serial.printf("ESP.getSdkVersion()=%s\n", ESP.getSdkVersion());

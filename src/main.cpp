@@ -1,4 +1,4 @@
-// MHI-AC-Ctrl by absalom-muc
+// MHI-AC-Ctrl 
 // read + write data via SPI controlled by MQTT
 // for version see support.h
 #include "MHI-AC-Ctrl-core.h"
@@ -6,13 +6,17 @@
 #include "support.h"
 
 
-
 MHI_AC_Ctrl_Core mhi_ac_ctrl_core;
-
 POWER_STATUS power_status = unknown;
 
 unsigned long room_temp_set_timeout_Millis = millis();
 bool troom_was_set_by_MQTT = false;
+//static int WiFiStatus = WIFI_CONNECT_TIMEOUT;   // start connecting to WiFi
+static int MQTTStatus = MQTT_NOT_CONNECTED;
+static unsigned long previousMillis = millis();
+#if TEMP_MEASURE_PERIOD > 0
+  static byte ds18x20_value_old = 0;
+#endif
 
 void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int length) {
   payload[length] = 0;  // we need a string
@@ -393,7 +397,8 @@ void setup() {
   Serial.begin(115200);
   delay(100);
   Serial.println();
-  Serial.println(F("Starting MHI-AC-Ctrl v" VERSION));
+  Serial.print("Starting MHI-AC-Ctrl ");
+  Serial.printf_P(PSTR("version: %lu\n"), VERSION);
   Serial.printf_P(PSTR("CPU frequency[Hz]=%lu\n"), F_CPU);
   Serial.printf("ESP.getCoreVersion()=%s\n", ESP.getCoreVersion().c_str());
   Serial.printf("ESP.getSdkVersion()=%s\n", ESP.getSdkVersion());
@@ -410,30 +415,34 @@ void setup() {
   mhi_ac_ctrl_core.MHIAcCtrlStatus(&mhiStatusHandler);
   mhi_ac_ctrl_core.init();
   // mhi_ac_ctrl_core.set_fan(7); // set fan AUTO, see https://github.com/absalom-muc/MHI-AC-Ctrl/issues/99
+  String IPmessage = "IP Address: " ;
+  Serial.println(IPmessage + WiFi.localIP().toString());
+  Serial.println("Setup done..."); 
+  previousMillis = millis();
 }
 
 
 void loop() {
-  static byte ds18x20_value_old = 0;
-  static int WiFiStatus = WIFI_CONNECT_TIMEOUT;   // start connecting to WiFi
-  static int MQTTStatus = MQTT_NOT_CONNECTED;
-  static unsigned long previousMillis = millis();
+  Serial.print("WiFi Status: ");
+  Serial.println(WiFi.status());
 
-  if (((WiFi.status() != WL_CONNECTED)  || 
-       (WiFiStatus != WIFI_CONNECT_OK)) || 
-       (WiFI_SEARCHStrongestAP && (millis() - previousMillis >= WiFI_SEARCH_FOR_STRONGER_AP_INTERVALL*60*1000))) {
-    //Serial.printf("loop: call setupWiFi(WiFiStatus)\n");
-    setupWiFi(WiFiStatus);
-    previousMillis = millis();
-    //Serial.println(WiFiStatus);
+
+  if (!WiFi.isConnected()){
+    Serial.println("No Wi-Fi Connection, restarting...");
+    delay(1000);
+    ESP.restart();
   }
   else {
     //Serial.printf("loop: WiFi.status()=%i\n", WiFi.status()); // see https://realglitch.com/2018/07/arduino-wifi-status-codes/
+    Serial.println("Checking MQTT");
     MQTTStatus=MQTTreconnect();
-    if (MQTTStatus == MQTT_RECONNECTED)
-      mhi_ac_ctrl_core.reset_old_values();  // after a reconnect
-    ArduinoOTA.handle();
+    if (MQTTStatus == MQTT_RECONNECTED){
+      Serial.println("Resetting old values MHI");
+      mhi_ac_ctrl_core.reset_old_values();  // after a reconnect.
+    }
+    //ArduinoOTA.handle();
   }
+
   
 #if TEMP_MEASURE_PERIOD > 0
   byte ds18x20_value = getDs18x20Temperature(25);

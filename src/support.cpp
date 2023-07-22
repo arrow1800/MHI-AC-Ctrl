@@ -152,16 +152,9 @@ void output_P(const ACStatus status, PGM_P topic, PGM_P payload) {
   else if ((status & 0xc0) == type_erropdata)
     strncpy_P(mqtt_topic, PSTR(MQTT_ERR_OP_PREFIX), mqtt_topic_size);
   strncat_P(mqtt_topic, topic, mqtt_topic_size - strlen(mqtt_topic));
-  Serial.print("You are here...");
-  Serial.print("MQTT topic: ");
-  Serial.print(mqtt_topic);
-  Serial.print(" Payload: ");
-  Serial.println(payload);
-  delay(5000);
   if(MQTTclient.publish_P(mqtt_topic, payload, false)==false){
     Serial.println( "MQTT Connection error");
-  };
-  Serial.print("Can we get here?");
+  }
 }
 
 #if TEMP_MEASURE_PERIOD > 0

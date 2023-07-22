@@ -93,6 +93,7 @@ int MQTTreconnect() {
       Serial.printf("MQTTclient.connected=%i\n", MQTTclient.connected());
       reconnect_trials=0;
       output_P((ACStatus)type_status, PSTR(TOPIC_CONNECTED), PSTR(PAYLOAD_CONNECTED_TRUE));
+      Serial.println("And now here");
       output_P((ACStatus)type_status, PSTR(TOPIC_VERSION), PSTR(VERSION));
 
       itoa(WiFi.RSSI(), strtmp, 10);
@@ -103,21 +104,6 @@ int MQTTreconnect() {
       output_P((ACStatus)type_status, PSTR(TOPIC_MQTT_LOST), strtmp);
       WiFi.BSSIDstr().toCharArray(strtmp, 20);
       output_P((ACStatus)type_status, PSTR(TOPIC_WIFI_BSSID), strtmp);
-
-      // for testing publish list of access points with the expected SSID 
-      // Serial.printf("MQTTreconnect(): %i access points available\n", networksFound);         
-      // for (uint i = 0; i < networksFound; i++)
-      // {
-      //   if(strcmp(WiFi.SSID(i).c_str(), WIFI_SSID) == 0){
-      //     strcpy(strtmp, "BSSID:");
-      //     strcat(strtmp, WiFi.BSSIDstr(i).c_str());
-      //     char strtmp2[20];
-      //     strcat(strtmp, " RSSI:");
-      //     itoa(WiFi.RSSI(i), strtmp2, 10);
-      //     strcat(strtmp, strtmp2);
-      //     MQTTclient.publish(MQTT_PREFIX "APs", strtmp, true);
-      //   }
-      // }
 
       itoa(rising_edge_cnt.SCK, strtmp, 10);
       output_P((ACStatus)type_status, PSTR(TOPIC_FSCK), strtmp);
@@ -166,9 +152,16 @@ void output_P(const ACStatus status, PGM_P topic, PGM_P payload) {
   else if ((status & 0xc0) == type_erropdata)
     strncpy_P(mqtt_topic, PSTR(MQTT_ERR_OP_PREFIX), mqtt_topic_size);
   strncat_P(mqtt_topic, topic, mqtt_topic_size - strlen(mqtt_topic));
-  
-  MQTTclient.publish_P(mqtt_topic, payload, true);
   Serial.print("You are here...");
+  Serial.print("MQTT topic: ");
+  Serial.print(mqtt_topic);
+  Serial.print(" Payload: ");
+  Serial.println(payload);
+  delay(5000);
+  if(MQTTclient.publish_P(mqtt_topic, payload, false)==false){
+    Serial.println( "MQTT Connection error");
+  };
+  Serial.print("Can we get here?");
 }
 
 #if TEMP_MEASURE_PERIOD > 0

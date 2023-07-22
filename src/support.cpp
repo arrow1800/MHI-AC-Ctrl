@@ -1,10 +1,15 @@
 #include "support.h"
+#include <WiFiManager.h>
 #include <Arduino.h>
 
 WiFiClient espClient;
+WiFiManager wifiManager;
 PubSubClient MQTTclient(espClient);
 int WIFI_lost = 0;
 int MQTT_lost = 0;
+int WiFiStatus = WIFI_CONNECT_TIMEOUT;
+uint networksFound = 0;
+unsigned long WiFiTimeoutMillis;
 
 struct rising_edge_cnt_struct{
   volatile uint32_t SCK = 0;
@@ -61,19 +66,26 @@ void MeasureFrequency() {  // measure the frequency on the pins
 }
 
 void initWiFi(){
+  String nodeID= HOSTNAME + String(ESP.getChipId());
+  wifiManager.setConfigPortalTimeout(180);
+  wifiManager.autoConnect(nodeID.c_str(), WIFI_PASSWORD);
+
+  WiFi.setAutoReconnect(true);
+  WiFi.persistent(true);
+
+  //wifiManager.resetSettings();
+  /* Code to be removed
   WiFi.persistent(false);
   WiFi.disconnect(true);    // Delete SDK wifi config
   delay(200);
   WiFi.mode(WIFI_STA);
   WiFi.hostname(HOSTNAME); 
   WiFi.setAutoReconnect(false);
-  //WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  //WiFi.begin(WIFI_SSID, WIFI_PASSWORD);*/
 }
 
-int WiFiStatus = WIFI_CONNECT_TIMEOUT;
-uint networksFound = 0;
-unsigned long WiFiTimeoutMillis;
 
+/*
 void handleWiFiScanResult(int WifinetworksFound) {  // Handles async WiFi scan result
   int max_rssi = -999;
   int strongest_AP = -1;
@@ -138,6 +150,7 @@ void setupWiFi(int& WiFiStatusParam) {
   }
   WiFiStatusParam = WiFiStatus; // return WiFiStatus to caller
 }
+*/
 
 int MQTTreconnect() {
   char strtmp[50];
@@ -167,19 +180,19 @@ int MQTTreconnect() {
       output_P((ACStatus)type_status, PSTR(TOPIC_WIFI_BSSID), strtmp);
 
       // for testing publish list of access points with the expected SSID 
-      Serial.printf("MQTTreconnect(): %i access points available\n", networksFound);         
-      for (uint i = 0; i < networksFound; i++)
-      {
-        if(strcmp(WiFi.SSID(i).c_str(), WIFI_SSID) == 0){
-          strcpy(strtmp, "BSSID:");
-          strcat(strtmp, WiFi.BSSIDstr(i).c_str());
-          char strtmp2[20];
-          strcat(strtmp, " RSSI:");
-          itoa(WiFi.RSSI(i), strtmp2, 10);
-          strcat(strtmp, strtmp2);
-          MQTTclient.publish(MQTT_PREFIX "APs", strtmp, true);
-        }
-      }
+      // Serial.printf("MQTTreconnect(): %i access points available\n", networksFound);         
+      // for (uint i = 0; i < networksFound; i++)
+      // {
+      //   if(strcmp(WiFi.SSID(i).c_str(), WIFI_SSID) == 0){
+      //     strcpy(strtmp, "BSSID:");
+      //     strcat(strtmp, WiFi.BSSIDstr(i).c_str());
+      //     char strtmp2[20];
+      //     strcat(strtmp, " RSSI:");
+      //     itoa(WiFi.RSSI(i), strtmp2, 10);
+      //     strcat(strtmp, strtmp2);
+      //     MQTTclient.publish(MQTT_PREFIX "APs", strtmp, true);
+      //   }
+      // }
 
       itoa(rising_edge_cnt.SCK, strtmp, 10);
       output_P((ACStatus)type_status, PSTR(TOPIC_FSCK), strtmp);

@@ -6,19 +6,17 @@
 #include "support.h"
 
 
-
 MHI_AC_Ctrl_Core mhi_ac_ctrl_core;
-
 POWER_STATUS power_status = unknown;
 
 unsigned long room_temp_set_timeout_Millis = millis();
 bool troom_was_set_by_MQTT = false;
-  static int WiFiStatus = WIFI_CONNECT_TIMEOUT;   // start connecting to WiFi
-  static int MQTTStatus = MQTT_NOT_CONNECTED;
-  static unsigned long previousMillis = millis();
-  #if TEMP_MEASURE_PERIOD > 0
+static int WiFiStatus = WIFI_CONNECT_TIMEOUT;   // start connecting to WiFi
+static int MQTTStatus = MQTT_NOT_CONNECTED;
+static unsigned long previousMillis = millis();
+#if TEMP_MEASURE_PERIOD > 0
   static byte ds18x20_value_old = 0;
-  #endif
+#endif
 
 void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int length) {
   payload[length] = 0;  // we need a string
@@ -416,6 +414,8 @@ void setup() {
   mhi_ac_ctrl_core.MHIAcCtrlStatus(&mhiStatusHandler);
   mhi_ac_ctrl_core.init();
   // mhi_ac_ctrl_core.set_fan(7); // set fan AUTO, see https://github.com/absalom-muc/MHI-AC-Ctrl/issues/99
+  String IPmessage = "IP Address: " ;
+  Serial.println(IPmessage + WiFi.localIP().toString());
   Serial.println("Setup done..."); 
   previousMillis = millis();
 }
@@ -436,7 +436,7 @@ void loop() {
        (WiFiStatus != WIFI_CONNECT_OK)) || 
        (WiFI_SEARCHStrongestAP && (millis() - previousMillis >= WiFI_SEARCH_FOR_STRONGER_AP_INTERVALL*60*1000))) {
     //Serial.printf("loop: call setupWiFi(WiFiStatus)\n");
-    setupWiFi(WiFiStatus);
+    //setupWiFi(WiFiStatus);
     previousMillis = millis();
     //Serial.println(WiFiStatus);
   }

@@ -76,12 +76,15 @@ Fan|r/w|1,2,3,4,"Auto"|Fan level
 Vanes|r/w|1,2,3,4,"Swing","?"|Vanes up/down position <sup>1</sup>
 Troom|r/w|0 ... 35|Room temperature (float) in °C, resolution is 0.25°C  <sup>2</sup>
 Tds1820|r|-40 .. 85|Temperature (float) by the additional DS18x20 sensor in °C, resolution is 0.5°C  <sup>3</sup>
-Errorcode|r|0 .. 255|error code (unsigned int)
+Errorcode|r|0 .. 255|error code (unsigned int) [MQTT Errorcode topic](#mqtt-errorcode-topic)
 ErrOpData|w||triggers the reading of last error operating data
+VanesLR|r/w|1,2,3,4,5,6,7,"Swing"|Vanes left/right position <sup>4</sup>
+3Dauto|r/w|"On", "Off"|3D auto only works for mode Auto, Cool and heat<sup>4</sup>
 
 <sup>1</sup> When the last command was received via the infrared remote control then the Vanes status is unknown and the "?" is published.   
 <sup>2</sup> Please compare with section [Room temperature](#room-temperature) for writing.   
 <sup>3</sup> Only available when a DS18x20 is connected, please see the description in [Hardware.md](Hardware.md) and in section [External Temperature Sensor Settings](#external-temperature-sensor-settings-supporth).
+<sup>4</sup> Only available if USE_EXTENDED_FRAME_SIZE is enabled in [support.h](src/support.h)
 
 Additionally, the following program status topics are available:
 
@@ -123,6 +126,32 @@ The path to the operating data topic is defined in
 The readout of last error operating data is triggered by publishing *ErrOpData* to topic ErrOpData. Not all of the operating data from section [Operating data](#operating-data-mhi-ac-ctrl-coreh) might be available as last error operating data.
 
 note: The topic and the payload text is adaptable by defines in [MHI-AC-Ctrl.h](src/MHI-AC-Ctrl.h)
+
+### MQTT Errorcode topic
+When an error in the AC occurs, the Errorcode topic will show a numeric value > 0.
+The meaning of this numeric value is:
+
+Value |meaning
+------|-----
+0  |Normal
+1  |Discharge pipe temperature protection control
+2  |Discharge pipe temperature anomaly
+3  |Current safe control of inverter primary current
+4  |High pressure protection control
+5  |High pressure anomaly
+6  |Low pressure protection control
+7  |Low pressure anomaly
+8  |Anti-frost prevention control
+9  |Current cut
+10 |Power transistor protection control
+11 |Power transistor anomaly (Overheat)
+12 |Compression ratio control
+13 |-
+14 |Condensation prevention control
+15 |Current safe control of inverter secondary current
+16 |Stop by compressor rotor lock
+17 |Stop by compressor startup failure
+
 
 ## OTA Settings ([support.h](src/support.h))
 OTA (Over the Air) update is the process of loading the firmware to ESP module using Wi-Fi connection rather than a serial port.
@@ -178,6 +207,14 @@ Per default the power on/off state is not changed, when you change the AC mode (
 But when you uncomment the following line, then the AC is switched on, once you change the AC mode and switched off if you publish "Off" to Mode (instead of Power). This beahviour is requested for use with [Home Assistant](https://www.home-assistant.io/).
 ```
 //#define POWERON_WHEN_CHANGING_MODE true           // uncomment it to switch on the AC when the mode (heat, cool, dry etc.) is changed
+```
+
+## Using extended frame size for enabling 3D auto and vanes L/R ([support.h](src/support.h))
+Per default the 3D auto and vanes left/right is not supported. 
+But when you uncomment the following line, the frame size is extended to 33 bytes (like the WF-RAC module). This will make it possible to use 3D auto and vanes L/R.
+```
+//#define USE_EXTENDED_FRAME_SIZE true                // uncomment if you want to use de extended frame size (33) which is used by the WF-RAC module
+                                                    // Then it will be possible to get and set the 3D auto and vanes left/right
 ```
 
 # Advanced settings
@@ -334,8 +371,7 @@ You find here some examples for integration of MHI-AC-Ctrl
 - [Node-Red / Google Assistant](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/60)
 - [openHAB](https://community.openhab.org/t/control-mhi-aircon-by-mqtt/104972)
 - [IoT MQTT Panel](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/59)
-- [Home Assistant](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/58)
-- [ESPHome](https://github.com/absalom-muc/MHI-AC-Ctrl/commit/4531327ff2b474eb047317975211df0430bdf199#commitcomment-51302883)
+- [Home Assistant/ESPHome](https://github.com/ginkage/MHI-AC-Ctrl-ESPHome)
 - [Tasmota](https://github.com/absalom-muc/MHI-AC-Ctrl/issues/13#issuecomment-630425714)
 - [ioBroker](https://forum.iobroker.net/topic/17041/anfrage-airconwithme-intesishome-klimasteuerung-adapter/14)
 - [FHEM](https://forum.fhem.de/index.php/topic,88841.0/all.html)

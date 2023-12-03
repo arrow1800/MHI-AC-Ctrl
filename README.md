@@ -1,3 +1,12 @@
+#Persoonlijke aanvulling op forked repo:
+
+- OTA te gebruiken mbv normale Arduino IDE. 
+ -> src folder openen in arduino ide.
+ -> evt pubsubclient library nog installeren dmv zip file in lib folder van je project
+ -> LOLIN Wemos D1 mini(clone) gebruiken
+ -> juiste ip adres kiezen in upload port
+ -> zorgen dat je de juiste hostname in support.h hebt ingesteld
+
 # MHI-AC-Ctrl
 Reads and writes data (e.g. power, mode, fan status etc.) from/to a Mitsubishi Heavy Industries (MHI) air conditioner (AC) via SPI controlled by MQTT. The AC is the SPI master and the ESP8266 is the SPI slave.
 

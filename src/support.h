@@ -9,7 +9,7 @@
 
 #define WIFI_SSID "UPC701551-HU"
 #define WIFI_PASSWORD "BRGBYMLQ"
-#define HOSTNAME "MHI-AC-Woonkamer"
+#define HOSTNAME "MHI-AC-Keuken"
 
 #define WiFI_SEARCHStrongestAP true                 // when false then the first WiFi access point with matching SSID found is used.
                                                     // when true then the strongest WiFi access point with matching SSID found is used, it doesn't work with hidden SSID
@@ -36,7 +36,7 @@
 
 //#define ROOM_TEMP_DS18X20                           // use room temperature from DS18x20
 
-#define ROOM_TEMP_MQTT_SET_TIMEOUT  60              // time in seconds, after this time w/o receiving a valid room temperature
+#define ROOM_TEMP_MQTT_SET_TIMEOUT  120              // time in seconds, after this time w/o receiving a valid room temperature
                                                     // via MQTT fallback to IU temperature sensor value
 
 #define POWERON_WHEN_CHANGING_MODE true           // uncomment it to switch on the AC when the mode (heat, cool, dry etc.) is changed
